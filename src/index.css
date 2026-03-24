@@ -1,0 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 60 14% 99%;
+    --foreground: 28 22% 18%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 20 30% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 20 30% 20%;
+
+    --primary: 126 41% 31%;
+    --primary-foreground: 40 50% 96%;
+
+    --secondary: 42 40% 95%;
+    --secondary-foreground: 20 30% 20%;
+
+    --muted: 45 28% 95%;
+    --muted-foreground: 35 10% 44%;
+
+    --accent: 41 49% 52%;
+    --accent-foreground: 40 50% 96%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 38 22% 86%;
+    --input: 35 28% 82%;
+    --ring: 132 33% 28%;
+
+    --radius: 0.875rem;
+  }
+
+  .dark {
+    --background: 24 27% 15%;
+    --foreground: 40 50% 96%;
+    --card: 24 27% 17%;
+    --card-foreground: 40 50% 96%;
+    --popover: 24 27% 17%;
+    --popover-foreground: 40 50% 96%;
+    --primary: 40 50% 96%;
+    --primary-foreground: 24 27% 17%;
+    --secondary: 24 17% 22%;
+    --secondary-foreground: 40 50% 96%;
+    --muted: 24 17% 22%;
+    --muted-foreground: 34 17% 70%;
+    --accent: 132 33% 35%;
+    --accent-foreground: 40 50% 96%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 24 17% 22%;
+    --input: 24 17% 22%;
+    --ring: 40 50% 96%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    background: #f9faf7;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Inter', sans-serif;
+    letter-spacing: -0.025em;
+  }
+
+  #root {
+    min-height: 100vh;
+  }
+}
+
+@layer utilities {
+  .acaro-surface {
+    @apply border border-[#e7e2d8] bg-white;
+  }
+
+  .acaro-muted {
+    @apply bg-[#fafaf7];
+  }
+
+  .acaro-chip {
+    @apply rounded-full border border-[#e4ddd2] bg-[#fafaf7] px-3 py-1 text-xs font-medium text-[#6d665d];
+  }
+
+  .acaro-section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.28em] text-[#927043];
+  }
+}
