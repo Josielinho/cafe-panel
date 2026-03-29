@@ -43,8 +43,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className={`min-h-screen bg-gradient-to-b ${palette.bg} px-4 py-8 sm:px-6 lg:px-8`}>
-      <div className="mx-auto flex min-h-[calc(100vh-4rem)] max-w-6xl items-center justify-center">
+    <div className={`flex min-h-screen flex-col bg-gradient-to-b ${palette.bg} px-4 pt-8 sm:px-6 lg:px-8`}>
+      <div className="mx-auto flex w-full flex-1 max-w-6xl items-center justify-center">
         <div className="grid w-full max-w-5xl gap-8 lg:grid-cols-[1.05fr,0.95fr] lg:items-center">
           <div className="hidden lg:block">
             <div className="max-w-xl">
@@ -135,6 +135,10 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      <footer className="mt-8 py-6 text-center text-sm text-[#8a7d6f]">
+        Este sistema fue desarrollado por Klhetvin G., Abdel N. y Andrey G.
+      </footer>
     </div>
   )
 }
