@@ -215,6 +215,12 @@ export function AdminLayout() {
           <main className="min-w-0 flex-1 px-4 py-5 sm:px-6 lg:px-8 lg:py-6">
             <Outlet />
           </main>
+
+          <footer className="border-t border-[#e7e2d8] px-4 py-5 sm:px-6 lg:px-8">
+            <p className="text-center text-sm text-[#6d675e]">
+              Este sistema fue desarrollado por Klhetvin G., Abdel N. y Andrey G.
+            </p>
+          </footer>
         </div>
       </div>
     </div>
@@ -223,7 +229,7 @@ export function AdminLayout() {
 
 function BrandBlock({ compact = false }: { compact?: boolean }) {
   return (
-    <div className={cn("overflow-hidden rounded-[22px] border border-[#e4ddd2] bg-white p-5", compact && "rounded-[18px]") }>
+    <div className={cn("overflow-hidden rounded-[22px] border border-[#e4ddd2] bg-white p-5", compact && "rounded-[18px]")}>
       <div className="flex items-center gap-4">
         <div className="rounded-[16px] bg-[#f5f1e8] p-2.5">
           <img src="/acaro-robusta-logo.png" alt="ACARO" className="h-12 w-12 rounded-full object-contain" />
