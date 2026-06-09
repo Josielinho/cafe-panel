@@ -1,83 +1,171 @@
-import { ArrowRight, BarChart3, ClipboardList } from "lucide-react"
-import { Link } from "react-router-dom"
+import { useMemo } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { motion } from "framer-motion"
+import { format } from "date-fns"
+import { es } from "date-fns/locale"
+import { ArrowRight, BarChart3, ClipboardList, CheckCircle2, Users } from "lucide-react"
+import { Link, useNavigate } from "react-router-dom"
 import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { fetchDashboardSurveys } from "@/services/dashboardService"
+import { MetricStrip } from "@/components/admin/MetricStrip"
 
-export default function HomePage() {
-  return (
-    <div className="space-y-4">
-      <section className="acaro-surface overflow-hidden rounded-[24px] bg-[#fcfaf5]">
-        <div className="grid gap-0 xl:grid-cols-[1.25fr,0.75fr]">
-          <div className="border-b border-[#e8ddcf] px-6 py-8 sm:px-8 xl:border-b-0 xl:border-r">
-            <p className="acaro-section-title">Panel</p>
-            <h2 className="mt-2 max-w-3xl text-3xl font-semibold leading-tight text-[#3d3025] sm:text-4xl">
-              Resultados y gestión de encuestas en un solo espacio.
-            </h2>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-[#6d665d]">
-              Consulta respuestas, revisa tendencias y administra encuestas desde una misma vista.
-            </p>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg" className="rounded-2xl bg-[#c4a14e] text-white hover:bg-[#b08f43]">
-                <Link to="/analitica">
-                  Abrir analítica
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="rounded-2xl border-[#d8ccb9] bg-transparent text-[#3d3025] hover:bg-[#f5efe4]">
-                <Link to="/encuestas">Abrir encuestas</Link>
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid gap-0 sm:grid-cols-2 xl:grid-cols-1">
-            <ModuleLink
-              title="Analítica"
-              text="Actividad por fecha, picos y detalle por persona."
-              to="/analitica"
-              action="Ir a analítica"
-              icon={BarChart3}
-            />
-            <ModuleLink
-              title="Encuestas"
-              text="Creación, edición y publicación de encuestas."
-              to="/encuestas"
-              action="Ir a encuestas"
-              icon={ClipboardList}
-            />
-          </div>
-        </div>
-      </section>
-    </div>
-  )
+/* ------------------------------------------------------------------ */
+/*  Animation helpers                                                  */
+/* ------------------------------------------------------------------ */
+const containerVariants = {
+  hidden: {},
+  show: {
+    transition: { staggerChildren: 0.12, delayChildren: 0.08 },
+  },
 }
 
-function ModuleLink({
-  title,
-  text,
-  to,
-  action,
-  icon: Icon,
-}: {
-  title: string
-  text: string
-  to: string
-  action: string
-  icon: typeof BarChart3
-}) {
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] },
+  },
+}
+
+/* ------------------------------------------------------------------ */
+/*  Page                                                                */
+/* ------------------------------------------------------------------ */
+export default function HomePage() {
+  const navigate = useNavigate()
+  const now = useMemo(() => new Date(), [])
+
+  const formattedDate = format(now, "EEEE, d 'de' MMMM 'de' yyyy", {
+    locale: es,
+  })
+
+  const surveysQuery = useQuery({
+    queryKey: ["dashboard-surveys"],
+    queryFn: fetchDashboardSurveys,
+  })
+
+  const surveys = surveysQuery.data ?? []
+  
+  const metrics = useMemo(() => {
+    const totalSurveys = surveys.length
+    const publishedSurveys = surveys.filter(s => s.estado === 'publicada').length
+    const totalResponses = surveys.reduce((sum, s) => sum + (s.response_count || 0), 0)
+    
+    return {
+      totalSurveys,
+      publishedSurveys,
+      totalResponses
+    }
+  }, [surveys])
+
+  const recentSurveys = useMemo(() => {
+    // Just grab the first 4 for the dashboard preview
+    return surveys.slice(0, 4)
+  }, [surveys])
+
   return (
-    <div className="border-t border-[#e8ddcf] px-6 py-6 first:border-t-0 xl:first:border-t-0 sm:first:border-r sm:last:border-r-0 xl:border-r-0 xl:border-t xl:first:border-t-0">
-      <div className="flex items-start gap-4">
-        <div className="rounded-[16px] bg-[#f5f1e6] p-3 text-[#2f6f35]">
-          <Icon className="h-5 w-5" />
+    <motion.div
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+      className="mx-auto max-w-5xl px-4 py-6 sm:px-6 lg:px-8"
+    >
+      {/* ── 1. WELCOME ───────────────────────────────────────────── */}
+      <motion.section variants={fadeUp} className="mb-8">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Bienvenidos al panel de encuestas de ACARO
+          </h1>
+          <p className="mt-2 text-base text-muted-foreground capitalize">
+            {formattedDate}
+          </p>
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="text-xl font-semibold text-[#3d3025]">{title}</h3>
-          <p className="mt-2 text-sm leading-6 text-[#6d665d]">{text}</p>
-          <Button asChild variant="link" className="mt-3 h-auto p-0 text-[#c4a14e]">
-            <Link to={to}>{action}</Link>
-          </Button>
+      </motion.section>
+
+      {/* ── 2. GLOBAL METRICS ──────────────────────────────────── */}
+      <motion.section variants={fadeUp} className="mb-8">
+        <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-4">
+          Resumen General
+        </h2>
+        
+        <div className="bg-background rounded-2xl border border-border">
+           <MetricStrip items={[
+              {
+                 label: "Total Respuestas",
+                 value: metrics.totalResponses,
+                 subtitle: "En todas las encuestas",
+                 icon: Users
+              },
+              {
+                 label: "Encuestas Activas",
+                 value: metrics.publishedSurveys,
+                 subtitle: "Publicadas",
+                 icon: CheckCircle2
+              },
+              {
+                 label: "Total Encuestas",
+                 value: metrics.totalSurveys,
+                 subtitle: "Creadas en el sistema",
+                 icon: ClipboardList
+              }
+           ]} />
         </div>
-      </div>
-    </div>
+      </motion.section>
+
+      {/* ── 3. RECENT SURVEYS ───────────────────────────────────── */}
+      <motion.section variants={fadeUp} className="mb-8">
+         <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+               Actividad Reciente
+            </h2>
+            <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary/80">
+               <Link to="/encuestas">
+                  Ver todas
+                  <ArrowRight className="ml-2 h-4 w-4" />
+               </Link>
+            </Button>
+         </div>
+
+         <div className="bg-background rounded-2xl border border-border overflow-hidden">
+            {surveysQuery.isLoading ? (
+               <div className="p-8 text-center text-sm text-muted-foreground">
+                  Cargando encuestas...
+               </div>
+            ) : recentSurveys.length > 0 ? (
+               <div className="divide-y divide-border">
+                  {recentSurveys.map(survey => (
+                     <div key={survey.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-muted/10 transition-colors">
+                        <div className="min-w-0 flex-1">
+                           <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-foreground truncate">{survey.titulo}</h3>
+                              <Badge variant="outline" className={survey.estado === 'publicada' ? 'border-primary/50 text-primary bg-primary/5 text-[10px]' : 'border-accent/50 text-accent bg-accent/5 text-[10px]'}>
+                                 {survey.estado === 'publicada' ? 'Publicada' : 'Borrador'}
+                              </Badge>
+                           </div>
+                           <p className="text-sm text-muted-foreground truncate">{survey.descripcion || 'Sin descripción'}</p>
+                        </div>
+                        <div className="flex items-center gap-4 sm:shrink-0 text-sm">
+                           <div className="flex flex-col items-end">
+                              <span className="font-medium text-foreground">{survey.response_count || 0}</span>
+                              <span className="text-xs text-muted-foreground">respuestas</span>
+                           </div>
+                           <div className="h-8 w-px bg-border hidden sm:block"></div>
+                           <Button variant="secondary" size="sm" onClick={() => navigate(`/analitica?survey=${survey.id}`)}>
+                              <BarChart3 className="mr-2 h-4 w-4" />
+                              Analítica
+                           </Button>
+                        </div>
+                     </div>
+                  ))}
+               </div>
+            ) : (
+               <div className="p-8 text-center text-sm text-muted-foreground">
+                  No hay encuestas creadas todavía.
+               </div>
+            )}
+         </div>
+      </motion.section>
+    </motion.div>
   )
 }

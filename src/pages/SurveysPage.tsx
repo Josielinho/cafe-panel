@@ -12,10 +12,11 @@ import {
   Plus,
   Search,
   Trash2,
+  ChevronDown,
+  ChevronUp
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -164,10 +165,12 @@ export default function SurveysPage() {
       return
     }
 
-    if (surveysQuery.data?.length) {
-      setSearchParams({ survey: surveysQuery.data[0].id }, { replace: true })
+    // Removing auto-selection of the first survey to default to list view
+    if (!routeSurveyId && !routeMode && selectedSurveyId) {
+       setSelectedSurveyId(null);
+       setIsCreatingNew(false);
     }
-  }, [isCreatingNew, routeMode, routeSurveyId, selectedSurveyId, setSearchParams, surveysQuery.data])
+  }, [isCreatingNew, routeMode, routeSurveyId, selectedSurveyId])
 
   useEffect(() => {
     if (surveyEditorQuery.data && !isCreatingNew) setEditor(surveyEditorQuery.data)
@@ -187,7 +190,6 @@ export default function SurveysPage() {
   const canAdvanceToReview = !surveyIssues.length
   const deleteReady = deleteConfirmText.trim().toLowerCase() === "borrar encuesta" && deleteChecklistChecked
   const selectedSurvey = (surveysQuery.data ?? []).find((survey) => survey.id === selectedSurveyId)
-  const searchResults = search.trim() ? filteredSurveys.slice(0, 6) : []
   const isEditorLoading = Boolean(selectedSurveyId) && !isCreatingNew && surveyEditorQuery.isLoading
   const headerTitle = isCreatingNew
     ? editor.titulo.trim() || "Nueva encuesta"
@@ -216,6 +218,12 @@ export default function SurveysPage() {
     setEditor(createEmptySurvey())
     setActiveStep(1)
     setSearchParams({ mode: "create" }, { replace: true })
+  }
+  
+  const backToList = () => {
+    setSelectedSurveyId(null)
+    setIsCreatingNew(false)
+    setSearchParams({}, { replace: true })
   }
 
   const addQuestion = () => {
@@ -308,70 +316,131 @@ export default function SurveysPage() {
 
     saveMutation.mutate(normalizedEditor)
   }
+  
+  const isListView = !isCreatingNew && !selectedSurveyId;
 
   return (
     <>
-      <Card className="overflow-hidden rounded-[18px] border-[#e8dfd4] bg-white shadow-none">
-        <CardContent className="p-0">
-          <section className="border-b border-[#ece6db] px-5 py-5 sm:px-6 lg:px-8">
-            <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2 text-sm text-[#6d665d]">
-                  <Badge className={editor.estado === "publicada" ? "rounded-full bg-[#edf5ee] text-[#2f6f35] hover:bg-[#edf5ee]" : "rounded-full bg-[#f5f1e6] text-[#8b6d34] hover:bg-[#f5f1e6]"}>
-                    {formatStatusLabel(editor.estado)}
-                  </Badge>
-                  <span>{editor.questions.length} preguntas</span>
-                  <span>•</span>
-                  <span>{totalOptions} opciones</span>
-                  <span>•</span>
-                  <span>{formatRecordCount(responseCount)}</span>
+      <div className="bg-background rounded-2xl border border-border overflow-hidden">
+        {isListView ? (
+          <>
+            <section className="border-b border-border px-5 py-5 sm:px-6 lg:px-8">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold tracking-tight text-foreground">Encuestas</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">Gestiona tus encuestas y formularios.</p>
                 </div>
-                <h2 className="mt-3 max-w-5xl break-words text-[2rem] font-semibold leading-tight text-[#3d3025] sm:text-[2.25rem]">
-                  {headerTitle}
-                </h2>
-                <p className="mt-2 max-w-4xl text-sm leading-6 text-[#6d665d]">
-                  {headerDescription}
-                </p>
+                <div className="flex items-center gap-3">
+                  <div className="relative max-w-sm w-full sm:w-[250px]">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Buscar..."
+                      className="pl-9 h-10 bg-background"
+                    />
+                  </div>
+                  <Button onClick={startNewSurvey} className="h-10">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Crear
+                  </Button>
+                </div>
               </div>
-
-              <div className="flex w-full max-w-[560px] flex-col gap-3 xl:items-end">
-                <div className="relative w-full">
-                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8b8177]" />
-                  <Input
-                    value={search}
-                    onChange={(event) => setSearch(event.target.value)}
-                    placeholder="Buscar encuesta"
-                    className="h-12 rounded-[14px] border-[#ded7cb] bg-white pl-11"
-                  />
-
-                  {searchResults.length ? (
-                    <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-[14px] border border-[#ebe4d9] bg-white shadow-[0_12px_32px_rgba(80,59,39,0.08)]">
-                      {searchResults.map((survey) => (
-                        <button
-                          key={survey.id}
-                          type="button"
-                          onClick={() => openExistingSurvey(survey.id)}
-                          className="flex w-full items-center justify-between gap-3 border-b border-[#f0e9df] px-4 py-3 text-left last:border-b-0 hover:bg-[#fbf8f3]"
-                        >
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-[#3d3025]">{survey.titulo}</p>
-                            <p className="mt-1 text-xs text-[#7f756b]">{formatStatusLabel(survey.estado)} · {survey.question_count ?? 0} preguntas</p>
-                          </div>
-                          <span className="text-xs text-[#8b8177]">{formatRecordCount(survey.response_count ?? 0)}</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
+            </section>
+            <section className="p-0">
+               {filteredSurveys.length > 0 ? (
+                 <div className="overflow-x-auto">
+                    <table className="w-full text-sm text-left">
+                      <thead className="text-xs text-muted-foreground uppercase bg-muted/30 border-b border-border">
+                        <tr>
+                          <th className="px-6 py-4 font-medium">Título</th>
+                          <th className="px-6 py-4 font-medium">Estado</th>
+                          <th className="px-6 py-4 font-medium">Preguntas</th>
+                          <th className="px-6 py-4 font-medium">Respuestas</th>
+                          <th className="px-6 py-4 font-medium text-right">Acciones</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {filteredSurveys.map(survey => (
+                          <tr key={survey.id} className="table-row-hover bg-background">
+                            <td className="px-6 py-4">
+                              <button onClick={() => openExistingSurvey(survey.id)} className="font-semibold text-foreground hover:underline text-left">
+                                {survey.titulo}
+                              </button>
+                              {survey.descripcion && <p className="text-xs text-muted-foreground mt-1 line-clamp-1">{survey.descripcion}</p>}
+                            </td>
+                            <td className="px-6 py-4">
+                              <Badge variant="outline" className={survey.estado === 'publicada' ? 'border-primary text-primary bg-primary/10' : 'border-accent text-accent bg-accent/10'}>
+                                {formatStatusLabel(survey.estado)}
+                              </Badge>
+                            </td>
+                            <td className="px-6 py-4 text-muted-foreground">
+                              {survey.question_count ?? 0}
+                            </td>
+                            <td className="px-6 py-4 text-muted-foreground">
+                              {survey.response_count ?? 0}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <div className="flex justify-end gap-2">
+                                <Button variant="ghost" size="sm" onClick={() => openExistingSurvey(survey.id)}>
+                                  <FilePenLine className="h-4 w-4 text-muted-foreground" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="text-destructive hover:bg-destructive/10" onClick={() => {
+                                  setSelectedSurveyId(survey.id);
+                                  setIsDeleteDialogOpen(true);
+                                  setEditor({...editor, id: survey.id}); // temp fix for delete dialog
+                                }}>
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                 </div>
+               ) : (
+                 <div className="py-12 text-center text-muted-foreground">
+                   No se encontraron encuestas.
+                 </div>
+               )}
+            </section>
+          </>
+        ) : (
+          <>
+            <section className="border-b border-border px-5 py-5 sm:px-6 lg:px-8 bg-muted/10">
+              <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mb-2">
+                    <Button variant="ghost" size="sm" onClick={backToList} className="-ml-2 h-7 px-2 text-muted-foreground">
+                      <ChevronRight className="h-4 w-4 rotate-180 mr-1" />
+                      Volver
+                    </Button>
+                    <span>•</span>
+                    <Badge className={editor.estado === "publicada" ? "rounded-full bg-primary text-primary-foreground" : "rounded-full bg-accent text-accent-foreground"}>
+                      {formatStatusLabel(editor.estado)}
+                    </Badge>
+                    <span>•</span>
+                    <span>{editor.questions.length} preguntas</span>
+                    <span>•</span>
+                    <span>{formatRecordCount(responseCount)}</span>
+                  </div>
+                  <h2 className="max-w-5xl break-words text-[2rem] font-bold leading-tight text-foreground tracking-tight">
+                    {headerTitle}
+                  </h2>
+                  <p className="mt-2 max-w-4xl text-sm leading-6 text-muted-foreground">
+                    {headerDescription}
+                  </p>
                 </div>
 
-                <div className="flex w-full flex-wrap items-center justify-between gap-3">
-                  <div className="text-sm text-[#6d665d]">{selectedSurveyId ? "Modo edición" : "Modo creación"}</div>
-                  <div className="flex flex-wrap items-center gap-3">
+                <div className="flex w-full max-w-[400px] flex-col gap-3 xl:items-end">
+                  <div className="flex w-full flex-wrap items-center justify-between xl:justify-end gap-3">
+                    <div className="text-sm text-muted-foreground xl:mr-4">{selectedSurveyId ? "Modo edición" : "Modo creación"}</div>
                     {editor.id ? (
                       <Button
                         type="button"
                         variant="outline"
-                        className="h-11 rounded-[14px] border-red-200 text-red-700 hover:bg-red-50 hover:text-red-800"
+                        className="text-destructive border-destructive/30 hover:bg-destructive/10"
                         onClick={() => setIsDeleteDialogOpen(true)}
                         disabled={deleteMutation.isPending}
                       >
@@ -379,96 +448,105 @@ export default function SurveysPage() {
                         Eliminar
                       </Button>
                     ) : null}
-                    <Button type="button" className="h-11 rounded-[14px]" onClick={startNewSurvey}>
-                      <Plus className="mr-2 h-4 w-4" />
-                      Nueva encuesta
-                    </Button>
                   </div>
                 </div>
               </div>
-            </div>
-          </section>
-          <section className="border-b border-[#eee6dc] px-5 py-4 sm:px-6 lg:px-8">
-            <div className="grid gap-3 md:grid-cols-3">
-              {builderSteps.map((step) => (
-                <StepTab
-                  key={step.id}
-                  step={step.id}
-                  title={step.title}
-                  isActive={activeStep === step.id}
-                  isComplete={step.id < activeStep}
-                  onClick={() => {
-                    if (step.id === 3 && !canAdvanceToReview) {
-                      toast.error("Completa los campos pendientes antes de revisar.")
-                      return
-                    }
-                    setActiveStep(step.id as 1 | 2 | 3)
-                  }}
-                />
-              ))}
-            </div>
-          </section>
-
-          <section className="p-5 sm:p-6 lg:p-8">
-            {isEditorLoading ? (
-              <div className="rounded-[22px] border border-[#e7dfd2] bg-[#fcfbf8] px-6 py-12 text-center text-sm text-[#6d665d]">
-                Cargando encuesta seleccionada…
+            </section>
+            
+            <section className="border-b border-border px-5 py-4 sm:px-6 lg:px-8">
+              <div className="flex items-center gap-2">
+                {builderSteps.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (step.id === 3 && !canAdvanceToReview) {
+                          toast.error("Completa los campos pendientes antes de revisar.")
+                          return
+                        }
+                        setActiveStep(step.id as 1 | 2 | 3)
+                      }}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-full transition-colors text-sm font-medium ${
+                        activeStep === step.id
+                          ? "bg-primary text-primary-foreground"
+                          : step.id < activeStep
+                            ? "bg-primary/10 text-primary"
+                            : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      <step.icon className="h-4 w-4" />
+                      <span className="hidden sm:inline">{step.title}</span>
+                      <span className="sm:hidden">{step.id}</span>
+                    </button>
+                    {index < builderSteps.length - 1 && (
+                      <div className="w-8 sm:w-12 h-[2px] mx-2 bg-border" />
+                    )}
+                  </div>
+                ))}
               </div>
-            ) : (
-              <>
-                {activeStep === 1 ? <GeneralInfoStep editor={editor} onChange={setEditor} onNext={() => setActiveStep(2)} /> : null}
+            </section>
 
-                {activeStep === 2 ? (
-                  <QuestionsStep
-                    editor={editor}
-                    setEditor={setEditor}
-                    onBack={() => setActiveStep(1)}
-                    onNext={() => {
-                      const issues = validateEditor(editor)
-                      if (issues.length) {
-                        toast.error(issues[0])
-                        return
-                      }
-                      setActiveStep(3)
-                    }}
-                    onAddQuestion={addQuestion}
-                    onDuplicateQuestion={duplicateQuestion}
-                  />
-                ) : null}
+            <section className="p-5 sm:p-6 lg:p-8 bg-background">
+              {isEditorLoading ? (
+                <div className="py-12 text-center text-sm text-muted-foreground">
+                  Cargando encuesta seleccionada…
+                </div>
+              ) : (
+                <>
+                  {activeStep === 1 ? <GeneralInfoStep editor={editor} onChange={setEditor} onNext={() => setActiveStep(2)} /> : null}
 
-                {activeStep === 3 ? (
-                  <ReviewStep
-                    editor={editor}
-                    issues={surveyIssues}
-                    isSaving={saveMutation.isPending}
-                    onBack={() => setActiveStep(2)}
-                    onSaveDraft={() => handleSave("borrador")}
-                    onPublish={() => handleSave("publicada")}
-                    onEditBasics={() => setActiveStep(1)}
-                    onEditQuestions={() => setActiveStep(2)}
-                  />
-                ) : null}
-              </>
-            )}
-          </section>
-        </CardContent>
-      </Card>
+                  {activeStep === 2 ? (
+                    <QuestionsStep
+                      editor={editor}
+                      setEditor={setEditor}
+                      onBack={() => setActiveStep(1)}
+                      onNext={() => {
+                        const issues = validateEditor(editor)
+                        if (issues.length) {
+                          toast.error(issues[0])
+                          return
+                        }
+                        setActiveStep(3)
+                      }}
+                      onAddQuestion={addQuestion}
+                      onDuplicateQuestion={duplicateQuestion}
+                    />
+                  ) : null}
+
+                  {activeStep === 3 ? (
+                    <ReviewStep
+                      editor={editor}
+                      issues={surveyIssues}
+                      isSaving={saveMutation.isPending}
+                      onBack={() => setActiveStep(2)}
+                      onSaveDraft={() => handleSave("borrador")}
+                      onPublish={() => handleSave("publicada")}
+                      onEditBasics={() => setActiveStep(1)}
+                      onEditQuestions={() => setActiveStep(2)}
+                    />
+                  ) : null}
+                </>
+              )}
+            </section>
+          </>
+        )}
+      </div>
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent className="max-w-xl overflow-hidden rounded-[22px] border-[#e2dbcf] p-0">
-          <div className="bg-red-50 px-6 py-5">
+        <DialogContent className="max-w-xl overflow-hidden rounded-2xl border-border p-0">
+          <div className="bg-destructive/10 px-6 py-5">
             <DialogHeader>
-              <DialogTitle className="text-xl text-red-950">Eliminar encuesta</DialogTitle>
-              <DialogDescription className="mt-2 text-sm leading-6 text-red-900/80">
+              <DialogTitle className="text-xl text-destructive">Eliminar encuesta</DialogTitle>
+              <DialogDescription className="mt-2 text-sm leading-6 text-destructive/80">
                 Esta acción eliminará la encuesta, sus preguntas y todas las respuestas asociadas.
               </DialogDescription>
             </DialogHeader>
           </div>
-          <div className="space-y-5 px-6 py-6">
-            <div className="rounded-[18px] border border-[#e2dbcf] bg-[#faf8f3] p-4 text-sm text-[#6b5b45]">
-              <p className="font-semibold text-[#3d3025]">Verificación requerida</p>
+          <div className="space-y-5 px-6 py-6 bg-background">
+            <div className="rounded-xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+              <p className="font-semibold text-foreground">Verificación requerida</p>
               <p className="mt-2 leading-6">
-                Escribe <span className="font-semibold">borrar encuesta</span> y marca la casilla para habilitar la eliminación.
+                Escribe <span className="font-semibold text-foreground">borrar encuesta</span> y marca la casilla para habilitar la eliminación.
               </p>
             </div>
 
@@ -477,127 +555,41 @@ export default function SurveysPage() {
                 value={deleteConfirmText}
                 onChange={(event) => setDeleteConfirmText(event.target.value)}
                 placeholder="borrar encuesta"
-                className="h-12 rounded-[14px] border-[#e2dbcf] bg-[#faf8f3]"
+                className="h-11 bg-background"
               />
             </Field>
 
-            <label className="flex items-start gap-3 rounded-[18px] border border-[#e2dbcf] bg-white p-4">
+            <label className="flex items-start gap-3 rounded-xl border border-border bg-background p-4 cursor-pointer">
               <Checkbox
                 checked={deleteChecklistChecked}
                 onCheckedChange={(checked) => setDeleteChecklistChecked(Boolean(checked))}
                 className="mt-1 h-5 w-5 rounded-md"
               />
               <div>
-                <p className="font-medium text-[#3d3025]">Entiendo que esta acción borra el historial de esta encuesta.</p>
-                <p className="mt-1 text-sm leading-6 text-[#6d665d]">No se podrá recuperar desde el panel una vez confirmada.</p>
+                <p className="font-medium text-foreground">Entiendo que esta acción borra el historial de esta encuesta.</p>
+                <p className="mt-1 text-sm leading-6 text-muted-foreground">No se podrá recuperar desde el panel una vez confirmada.</p>
               </div>
             </label>
           </div>
-          <DialogFooter className="border-t border-[#e2dbcf] px-6 py-4">
-            <Button type="button" variant="outline" className="rounded-[14px]" onClick={() => setIsDeleteDialogOpen(false)}>
+          <DialogFooter className="border-t border-border bg-muted/20 px-6 py-4">
+            <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
               Cancelar
             </Button>
             <Button
               type="button"
               variant="destructive"
-              className="rounded-[14px]"
               disabled={!deleteReady || deleteMutation.isPending || !editor.id}
               onClick={() => {
                 if (!editor.id) return
                 deleteMutation.mutate({ surveyId: editor.id, confirmed: true })
               }}
             >
-              Eliminar definitivamente
+              {deleteMutation.isPending ? "Eliminando..." : "Eliminar definitivamente"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
     </>
-  )
-}
-
-function MetricCell({ label, value }: { label: string; value: number }) {
-  return (
-    <div className="rounded-[14px] border border-[#ebe4d9] bg-[#fbfaf7] px-4 py-4">
-      <p className="acaro-section-title">{label}</p>
-      <p className="mt-2 text-4xl font-semibold leading-none text-[#3d3025]">{value}</p>
-    </div>
-  )
-}
-
-function SurveyCompactCard({
-  survey,
-  isSelected,
-  isNew,
-  onClick,
-}: {
-  survey?: DashboardSurvey
-  isSelected: boolean
-  isNew?: boolean
-  onClick: () => void
-}) {
-  if (isNew) {
-    return (
-      <button
-        type="button"
-        onClick={onClick}
-        className={`w-full rounded-[16px] border px-4 py-4 text-left transition ${
-          isSelected
-            ? "border-[#2f6f35] bg-[#eef5ee] text-[#22562d]"
-            : "border-dashed border-[#d7ccba] bg-white text-[#3d3025] hover:border-[#c6b391]"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <div className={`rounded-[12px] p-2 ${isSelected ? "bg-white/10" : "bg-[#faf8f3]"}`}>
-            <ClipboardPlus className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <p className="font-semibold">Nueva encuesta</p>
-            <p className={`mt-1 text-sm ${isSelected ? "text-[#6f5f48]" : "text-[#6d665d]"}`}>Crear desde cero</p>
-          </div>
-        </div>
-      </button>
-    )
-  }
-
-  if (!survey) return null
-
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`w-full rounded-[16px] border px-4 py-4 text-left transition ${
-        isSelected
-          ? "border-[#c4a14e] bg-[#f7f2e6] text-[#3d3025] shadow-sm"
-          : "border-[#e2dbcf] bg-white hover:border-[#cdb79d] hover:bg-[#fdfbf7]"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge
-              className={`rounded-full ${
-                isSelected
-                  ? "bg-white text-[#3d3025] hover:bg-white"
-                  : survey.estado === "publicada"
-                    ? "bg-[#d9eadc] text-[#2f5b3a] hover:bg-[#d9eadc]"
-                    : "bg-[#f1e8da] text-[#6b5b45] hover:bg-[#f1e8da]"
-              }`}
-            >
-              {formatStatusLabel(survey.estado)}
-            </Badge>
-            <span className={`text-xs ${isSelected ? "text-[#6f5f48]" : "text-[#6d665d]"}`}>{survey.question_count ?? 0} preg.</span>
-          </div>
-          <p className="mt-2 line-clamp-2 break-words text-base font-semibold leading-6">{survey.titulo}</p>
-          <p className={`mt-1 line-clamp-2 text-sm leading-5 ${isSelected ? "text-[#6f5f48]" : "text-[#6d665d]"}`}>
-            {survey.descripcion?.trim() || "Sin descripción"}
-          </p>
-        </div>
-        <span className={`shrink-0 text-xs font-medium ${isSelected ? "text-[#8b6d34]" : "text-[#8b8177]"}`}>
-          {formatRecordCount(survey.response_count ?? 0)}
-        </span>
-      </div>
-    </button>
   )
 }
 
@@ -611,19 +603,19 @@ function GeneralInfoStep({
   onNext: () => void
 }) {
   return (
-    <div className="space-y-6">
-      <section className="grid gap-5 lg:grid-cols-2">
+    <div className="space-y-6 max-w-4xl fade-in">
+      <section className="grid gap-6 lg:grid-cols-2">
         <Field label="Título de la encuesta">
           <Input
             value={editor.titulo}
             onChange={(event) => onChange((current) => ({ ...current, titulo: event.target.value }))}
             placeholder="Ejemplo: Encuesta de satisfacción"
-            className="h-12 rounded-2xl border-[#e2dbcf] bg-white"
+            className="h-11 bg-background"
           />
         </Field>
         <Field label="Estado">
           <Select value={editor.estado} onValueChange={(value: "borrador" | "publicada") => onChange((current) => ({ ...current, estado: value }))}>
-            <SelectTrigger className="h-12 rounded-2xl border-[#e2dbcf] bg-white">
+            <SelectTrigger className="h-11 bg-background">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -638,7 +630,7 @@ function GeneralInfoStep({
             value={editor.descripcion}
             onChange={(event) => onChange((current) => ({ ...current, descripcion: event.target.value }))}
             placeholder="Describe el objetivo de la encuesta"
-            className="min-h-[140px] rounded-2xl border-[#e2dbcf] bg-white"
+            className="min-h-[140px] bg-background"
           />
         </Field>
 
@@ -647,14 +639,14 @@ function GeneralInfoStep({
             value={editor.logo_url ?? ""}
             onChange={(event) => onChange((current) => ({ ...current, logo_url: event.target.value }))}
             placeholder="Pega aquí la URL del logo"
-            className="h-12 rounded-2xl border-[#e2dbcf] bg-white"
+            className="h-11 bg-background"
           />
         </Field>
       </section>
 
-      <div className="flex justify-end border-t border-[#e2dbcf] pt-6">
-        <Button type="button" className="rounded-2xl" onClick={onNext}>
-          Continuar
+      <div className="flex justify-end border-t border-border pt-6">
+        <Button type="button" onClick={onNext}>
+          Siguiente paso
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
@@ -678,21 +670,21 @@ function QuestionsStep({
   onDuplicateQuestion: (index: number) => void
 }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="space-y-6 fade-in max-w-5xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
         <div>
-          <h2 className="text-2xl font-semibold text-[#3d3025]">Preguntas</h2>
-          <p className="mt-1 text-sm text-[#6d665d]">Agrega y organiza la estructura de la encuesta.</p>
+          <h3 className="text-lg font-semibold text-foreground tracking-tight">Preguntas de la encuesta</h3>
+          <p className="text-sm text-muted-foreground">Configura el orden y las opciones de respuesta.</p>
         </div>
-        <Button type="button" variant="outline" className="rounded-2xl" onClick={onAddQuestion}>
+        <Button type="button" variant="outline" onClick={onAddQuestion}>
           <Plus className="mr-2 h-4 w-4" />
-          Agregar pregunta
+          Nueva pregunta
         </Button>
       </div>
 
-      <section className="space-y-5">
+      <section className="space-y-4">
         {editor.questions.map((question, index) => (
-          <QuestionCard
+          <QuestionRow
             key={question.id ?? `question-${index}`}
             question={question}
             index={index}
@@ -719,28 +711,194 @@ function QuestionsStep({
         ))}
       </section>
 
-      <div className="rounded-[24px] border border-dashed border-[#cdb79d] bg-white p-5">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-lg font-semibold text-[#3d3025]">Agregar más preguntas</p>
-            <p className="mt-1 text-sm text-[#6d665d]">Usa este botón para seguir construyendo la encuesta.</p>
-          </div>
-          <Button type="button" className="rounded-2xl" onClick={onAddQuestion}>
-            <Plus className="mr-2 h-4 w-4" />
-            Agregar otra pregunta
-          </Button>
-        </div>
+      <div className="flex justify-center border border-dashed border-border rounded-xl p-6 bg-muted/20">
+        <Button type="button" variant="secondary" onClick={onAddQuestion}>
+          <Plus className="mr-2 h-4 w-4" />
+          Agregar otra pregunta al final
+        </Button>
       </div>
 
-      <div className="flex flex-wrap justify-between gap-3 border-t border-[#e2dbcf] pt-6">
-        <Button type="button" variant="outline" className="rounded-2xl" onClick={onBack}>
+      <div className="flex flex-wrap justify-between gap-3 border-t border-border pt-6 mt-8">
+        <Button type="button" variant="outline" onClick={onBack}>
           Volver
         </Button>
-        <Button type="button" className="rounded-2xl" onClick={onNext}>
-          Revisar
+        <Button type="button" onClick={onNext}>
+          Ir a revisión
           <ChevronRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
+    </div>
+  )
+}
+
+function QuestionRow({
+  question,
+  index,
+  onChange,
+  onRemove,
+  onDuplicate,
+}: {
+  question: SurveyQuestionForm
+  index: number
+  onChange: (value: SurveyQuestionForm) => void
+  onRemove: () => void
+  onDuplicate: () => void
+}) {
+  const [expanded, setExpanded] = useState(index === 0)
+  const needsOptions = question.tipo_pregunta === "opcion_unica" || question.tipo_pregunta === "opcion_multiple"
+
+  useEffect(() => {
+    if (!needsOptions && question.opciones.length) onChange({ ...question, opciones: [] })
+  }, [needsOptions, onChange, question])
+
+  return (
+    <div className={`border border-border rounded-xl bg-background transition-all ${expanded ? 'shadow-sm ring-1 ring-border' : ''}`}>
+      {/* Row Header (Always visible) */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-4 cursor-pointer" onClick={() => setExpanded(!expanded)}>
+        <div className="flex items-center gap-4 flex-1 min-w-0">
+          <div className="bg-muted text-muted-foreground w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium shrink-0">
+            {index + 1}
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="font-medium text-foreground truncate">
+              {question.texto_pregunta || <span className="text-muted-foreground italic">Pregunta vacía</span>}
+            </p>
+            <div className="flex items-center gap-2 mt-1">
+              <Badge variant="secondary" className="text-[10px] uppercase font-semibold">
+                 {questionTypeOptions.find((o) => o.value === question.tipo_pregunta)?.label}
+              </Badge>
+              {question.es_obligatoria && <span className="text-xs text-destructive font-medium">*Obligatoria</span>}
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2 sm:shrink-0" onClick={e => e.stopPropagation()}>
+           <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={onDuplicate} title="Duplicar">
+             <Copy className="h-4 w-4 text-muted-foreground" />
+           </Button>
+           <Button type="button" variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={onRemove} title="Quitar">
+             <Trash2 className="h-4 w-4" />
+           </Button>
+           <Button type="button" variant="ghost" size="icon" className="h-8 w-8" onClick={() => setExpanded(!expanded)}>
+             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+           </Button>
+        </div>
+      </div>
+
+      {/* Expanded Editor */}
+      {expanded && (
+        <div className="p-4 pt-0 border-t border-border mt-2 slide-up">
+           <div className="grid gap-4 mt-4 md:grid-cols-[1fr,200px,120px]">
+             <Field label="Enunciado de la pregunta">
+                <Textarea
+                  value={question.texto_pregunta}
+                  onChange={(event) => onChange({ ...question, texto_pregunta: event.target.value })}
+                  className="min-h-[80px] bg-background resize-y"
+                  placeholder="Ej. ¿Qué opinas de...?"
+                />
+             </Field>
+             <div className="space-y-4">
+                <Field label="Tipo de respuesta">
+                  <Select value={question.tipo_pregunta} onValueChange={(value: SurveyQuestionForm["tipo_pregunta"]) => onChange({ ...question, tipo_pregunta: value })}>
+                    <SelectTrigger className="bg-background">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {questionTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
+                <Field label="Código int.">
+                  <Input
+                    value={question.codigo_pregunta}
+                    onChange={(event) => onChange({ ...question, codigo_pregunta: event.target.value })}
+                    className="bg-background"
+                  />
+                </Field>
+             </div>
+             <div className="flex flex-col gap-2 pt-8 pl-2 border-l border-border">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <Switch checked={question.es_obligatoria} onCheckedChange={(value) => onChange({ ...question, es_obligatoria: value })} />
+                  <span className="text-sm font-medium text-foreground">Obligatoria</span>
+                </label>
+             </div>
+           </div>
+
+           {needsOptions && (
+             <div className="mt-6 border border-border rounded-lg p-4 bg-muted/10">
+                <div className="flex items-center justify-between mb-4">
+                  <Label className="text-sm font-medium">Opciones de respuesta</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() =>
+                      onChange({
+                        ...question,
+                        opciones: [
+                          ...question.opciones,
+                          {
+                            valor_opcion: `opcion_${question.opciones.length + 1}`,
+                            etiqueta_opcion: "",
+                            posicion: question.opciones.length + 1,
+                            permite_texto_libre: false,
+                          },
+                        ],
+                      })
+                    }
+                  >
+                    <Plus className="mr-2 h-3 w-3" />
+                    Agregar
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {question.opciones.map((option, optionIndex) => (
+                    <div key={option.id ?? `option-${optionIndex}`} className="flex items-center gap-2 bg-background p-2 rounded-md border border-border">
+                      <Input
+                        value={option.etiqueta_opcion}
+                        onChange={(event) => {
+                          const updated = [...question.opciones]
+                          updated[optionIndex] = { ...updated[optionIndex], etiqueta_opcion: event.target.value }
+                          onChange({ ...question, opciones: updated })
+                        }}
+                        placeholder="Texto visible (Ej. Muy bueno)"
+                        className="h-9 text-sm"
+                      />
+                      <Input
+                        value={option.valor_opcion}
+                        onChange={(event) => {
+                          const updated = [...question.opciones]
+                          updated[optionIndex] = { ...updated[optionIndex], valor_opcion: event.target.value }
+                          onChange({ ...question, opciones: updated })
+                        }}
+                        placeholder="Valor interno (Ej. 5)"
+                        className="h-9 text-sm font-mono"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9 text-destructive shrink-0"
+                        onClick={() => {
+                          const updated = question.opciones.filter((_, currentIndex) => currentIndex !== optionIndex)
+                          onChange({ ...question, opciones: updated })
+                        }}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                  {question.opciones.length === 0 && (
+                    <p className="text-sm text-muted-foreground italic text-center py-2">No hay opciones configuradas. Agrega al menos dos.</p>
+                  )}
+                </div>
+             </div>
+           )}
+        </div>
+      )}
     </div>
   )
 }
@@ -765,80 +923,81 @@ function ReviewStep({
   onEditQuestions: () => void
 }) {
   return (
-    <div className="space-y-6">
-      <section className="grid gap-4 lg:grid-cols-2">
-        <ReviewCard title="Datos generales" action="Editar" onClick={onEditBasics}>
-          <ReviewLine label="Título" value={editor.titulo || "Pendiente"} />
-          <ReviewLine label="Estado" value={formatStatusLabel(editor.estado)} />
-          <ReviewLine label="Descripción" value={editor.descripcion || "Sin descripción"} multiline />
-        </ReviewCard>
-        <ReviewCard title="Preguntas" action="Editar" onClick={onEditQuestions}>
-          <ReviewLine label="Total" value={`${editor.questions.length} preguntas`} />
-          <ReviewLine
-            label="Tipos"
-            value={Array.from(new Set(editor.questions.map((question) => question.tipo_pregunta))).join(", ") || "Sin preguntas"}
-            multiline
-          />
-        </ReviewCard>
-      </section>
+    <div className="space-y-8 fade-in max-w-4xl">
+      <div className="grid gap-6 md:grid-cols-2">
+        <div className="border border-border rounded-xl overflow-hidden bg-background">
+           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
+             <h4 className="font-semibold text-foreground">1. Datos Generales</h4>
+             <Button variant="ghost" size="sm" onClick={onEditBasics} className="text-muted-foreground">Editar</Button>
+           </div>
+           <div className="p-4 space-y-3">
+             <div>
+               <span className="text-xs text-muted-foreground uppercase">Título</span>
+               <p className="font-medium text-foreground">{editor.titulo || <span className="text-destructive italic">Falta título</span>}</p>
+             </div>
+             <div>
+               <span className="text-xs text-muted-foreground uppercase">Descripción</span>
+               <p className="text-sm text-foreground whitespace-pre-wrap">{editor.descripcion || "Sin descripción"}</p>
+             </div>
+             <div>
+               <span className="text-xs text-muted-foreground uppercase">Estado a guardar</span>
+               <p className="font-medium text-foreground">{formatStatusLabel(editor.estado)}</p>
+             </div>
+           </div>
+        </div>
 
-      <section className="rounded-[16px] border border-[#e2dbcf] bg-white p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <p className="text-lg font-semibold text-[#3d3025]">Listado de preguntas</p>
-            <p className="text-sm text-[#6d665d]">Se mostrarán en este orden.</p>
-          </div>
-          <Badge variant="secondary" className="rounded-full bg-[#faf8f3] text-[#6d665d]">
-            {editor.questions.length}
-          </Badge>
+        <div className="border border-border rounded-xl overflow-hidden bg-background">
+           <div className="flex items-center justify-between p-4 border-b border-border bg-muted/20">
+             <h4 className="font-semibold text-foreground">2. Estructura ({editor.questions.length})</h4>
+             <Button variant="ghost" size="sm" onClick={onEditQuestions} className="text-muted-foreground">Editar</Button>
+           </div>
+           <div className="p-4">
+              <ul className="space-y-3 text-sm">
+                {editor.questions.slice(0,5).map((q, i) => (
+                  <li key={i} className="flex gap-2 text-foreground">
+                    <span className="font-medium shrink-0">{i+1}.</span> 
+                    <span className="truncate">{q.texto_pregunta || "Pregunta sin texto"}</span>
+                    <Badge variant="outline" className="ml-auto shrink-0 text-[10px]">
+                      {questionTypeOptions.find((o) => o.value === q.tipo_pregunta)?.label}
+                    </Badge>
+                  </li>
+                ))}
+                {editor.questions.length > 5 && (
+                  <li className="text-muted-foreground italic text-center pt-2">...y {editor.questions.length - 5} preguntas más</li>
+                )}
+              </ul>
+           </div>
         </div>
-        <div className="mt-4 space-y-3">
-          {editor.questions.map((question, index) => (
-            <div key={question.id ?? `review-question-${index}`} className="rounded-[20px] border border-[#ebe4d9] bg-[#fdfcf9] p-4">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className="rounded-full bg-[#2f6f35] text-white hover:bg-[#2f6f35]">
-                  {questionTypeOptions.find((option) => option.value === question.tipo_pregunta)?.label ?? question.tipo_pregunta}
-                </Badge>
-                {question.es_obligatoria ? (
-                  <Badge className="rounded-full bg-[#d9eadc] text-[#2f5b3a] hover:bg-[#d9eadc]">Obligatoria</Badge>
-                ) : null}
-              </div>
-              <p className="mt-3 font-semibold text-[#3d3025]">{question.texto_pregunta || `Pregunta ${index + 1}`}</p>
-              {(question.tipo_pregunta === "opcion_unica" || question.tipo_pregunta === "opcion_multiple") && question.opciones.length ? (
-                <p className="mt-2 text-sm leading-6 text-[#6d665d]">
-                  Opciones: {question.opciones.map((option) => option.etiqueta_opcion || option.valor_opcion).join(", ")}
-                </p>
-              ) : null}
-            </div>
-          ))}
-        </div>
-      </section>
+      </div>
 
       {issues.length ? (
-        <div className="rounded-[20px] border border-red-200 bg-red-50 p-4 text-sm text-red-800">
-          <p className="font-semibold">Ajustes pendientes</p>
-          <ul className="mt-2 list-disc space-y-1 pl-5">
-            {issues.slice(0, 6).map((issue) => (
+        <div className="rounded-xl border border-destructive/50 bg-destructive/10 p-5 text-sm">
+          <div className="flex items-center gap-2 text-destructive font-semibold mb-3">
+             <AlertTriangle className="h-5 w-5" />
+             <p>Ajustes pendientes antes de guardar</p>
+          </div>
+          <ul className="list-disc space-y-1 pl-6 text-destructive/90">
+            {issues.map((issue) => (
               <li key={issue}>{issue}</li>
             ))}
           </ul>
         </div>
       ) : (
-        <div className="flex gap-3 rounded-[20px] border border-[#b9d2be] bg-[#edf5ee] p-4 text-sm text-[#2f5b3a]">
-          <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
-          <div>La encuesta está lista para guardarse.</div>
+        <div className="flex items-center gap-3 rounded-xl border border-primary/30 bg-primary/10 p-5 text-sm text-primary-foreground font-medium">
+          <CheckCircle2 className="h-5 w-5 text-primary" />
+          <div className="text-primary">La encuesta está lista para guardarse sin errores de validación.</div>
         </div>
       )}
 
-      <div className="flex flex-wrap justify-between gap-3 border-t border-[#e2dbcf] pt-6">
-        <Button type="button" variant="outline" className="rounded-2xl" onClick={onBack}>
-          Volver
+      <div className="flex flex-wrap justify-between gap-3 border-t border-border pt-6 mt-8">
+        <Button type="button" variant="outline" onClick={onBack}>
+          Volver a preguntas
         </Button>
         <div className="flex flex-wrap gap-3">
-          <Button type="button" variant="outline" className="rounded-2xl" onClick={onSaveDraft} disabled={isSaving || issues.length > 0}>
-            Guardar borrador
+          <Button type="button" variant="secondary" onClick={onSaveDraft} disabled={isSaving || issues.length > 0}>
+            Guardar como borrador
           </Button>
-          <Button type="button" className="rounded-2xl" onClick={onPublish} disabled={isSaving || issues.length > 0}>
+          <Button type="button" onClick={onPublish} disabled={isSaving || issues.length > 0}>
             Guardar y publicar
           </Button>
         </div>
@@ -850,217 +1009,8 @@ function ReviewStep({
 function Field({ label, className, children }: { label: string; className?: string; children: ReactNode }) {
   return (
     <div className={className}>
-      <Label className="mb-2 inline-block text-sm font-medium text-[#6d665d]">{label}</Label>
+      <Label className="mb-2 inline-block text-sm font-medium text-foreground">{label}</Label>
       {children}
-    </div>
-  )
-}
-
-function QuestionCard({
-  question,
-  index,
-  onChange,
-  onRemove,
-  onDuplicate,
-}: {
-  question: SurveyQuestionForm
-  index: number
-  onChange: (value: SurveyQuestionForm) => void
-  onRemove: () => void
-  onDuplicate: () => void
-}) {
-  const needsOptions = question.tipo_pregunta === "opcion_unica" || question.tipo_pregunta === "opcion_multiple"
-
-  useEffect(() => {
-    if (!needsOptions && question.opciones.length) onChange({ ...question, opciones: [] })
-  }, [needsOptions, onChange, question])
-
-  return (
-    <div className="rounded-[16px] border border-[#e2dbcf] bg-white p-5">
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-        <div className="min-w-0">
-          <p className="text-xs font-semibold uppercase tracking-[0.26em] text-[#6d665d]">Pregunta {index + 1}</p>
-          <p className="mt-1 break-words text-lg font-semibold text-[#3d3025]">{question.texto_pregunta || "Escribe el enunciado de la pregunta"}</p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" className="rounded-2xl" onClick={onDuplicate}>
-            <Copy className="mr-2 h-4 w-4" />
-            Duplicar
-          </Button>
-          <Button type="button" variant="ghost" className="rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700" onClick={onRemove}>
-            <Trash2 className="mr-2 h-4 w-4" />
-            Quitar
-          </Button>
-        </div>
-      </div>
-
-      <div className="mt-5 grid gap-4 lg:grid-cols-[140px,220px,1fr]">
-        <Field label="Código">
-          <Input
-            value={question.codigo_pregunta}
-            onChange={(event) => onChange({ ...question, codigo_pregunta: event.target.value })}
-            className="h-12 rounded-2xl border-[#e2dbcf] bg-[#faf8f3]"
-          />
-        </Field>
-        <Field label="Tipo">
-          <Select value={question.tipo_pregunta} onValueChange={(value: SurveyQuestionForm["tipo_pregunta"]) => onChange({ ...question, tipo_pregunta: value })}>
-            <SelectTrigger className="h-12 rounded-2xl border-[#e2dbcf] bg-[#faf8f3]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {questionTypeOptions.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </Field>
-        <div className="flex items-center rounded-2xl border border-[#e2dbcf] bg-[#faf8f3] px-4 py-3">
-          <Switch checked={question.es_obligatoria} onCheckedChange={(value) => onChange({ ...question, es_obligatoria: value })} />
-          <span className="ml-3 text-sm font-medium text-[#3d3025]">Obligatoria</span>
-        </div>
-      </div>
-
-      <div className="mt-4">
-        <Field label="Pregunta">
-          <Textarea
-            value={question.texto_pregunta}
-            onChange={(event) => onChange({ ...question, texto_pregunta: event.target.value })}
-            className="min-h-[100px] rounded-2xl border-[#e2dbcf] bg-[#faf8f3]"
-          />
-        </Field>
-      </div>
-
-      {needsOptions ? (
-        <div className="mt-5 rounded-[16px] border border-[#e2dbcf] bg-[#faf8f3] p-5">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-base font-semibold text-[#3d3025]">Opciones</p>
-              <p className="text-sm text-[#6d665d]">Texto visible y valor.</p>
-            </div>
-            <Button
-              type="button"
-              variant="outline"
-              className="rounded-2xl"
-              onClick={() =>
-                onChange({
-                  ...question,
-                  opciones: [
-                    ...question.opciones,
-                    {
-                      valor_opcion: `opcion_${question.opciones.length + 1}`,
-                      etiqueta_opcion: "",
-                      posicion: question.opciones.length + 1,
-                      permite_texto_libre: false,
-                    },
-                  ],
-                })
-              }
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Agregar opción
-            </Button>
-          </div>
-
-          <div className="mt-4 space-y-3">
-            {question.opciones.map((option, optionIndex) => (
-              <div key={option.id ?? `option-${optionIndex}`} className="grid gap-3 rounded-[18px] bg-white p-4 lg:grid-cols-[1fr,1fr,auto]">
-                <Input
-                  value={option.etiqueta_opcion}
-                  onChange={(event) => {
-                    const updated = [...question.opciones]
-                    updated[optionIndex] = { ...updated[optionIndex], etiqueta_opcion: event.target.value }
-                    onChange({ ...question, opciones: updated })
-                  }}
-                  placeholder="Texto visible"
-                  className="h-11 rounded-2xl border-[#e2dbcf] bg-[#faf8f3]"
-                />
-                <Input
-                  value={option.valor_opcion}
-                  onChange={(event) => {
-                    const updated = [...question.opciones]
-                    updated[optionIndex] = { ...updated[optionIndex], valor_opcion: event.target.value }
-                    onChange({ ...question, opciones: updated })
-                  }}
-                  placeholder="Valor interno"
-                  className="h-11 rounded-2xl border-[#e2dbcf] bg-[#faf8f3]"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="rounded-2xl text-red-600 hover:bg-red-50 hover:text-red-700"
-                  onClick={() => {
-                    const updated = question.opciones.filter((_, currentIndex) => currentIndex !== optionIndex)
-                    onChange({ ...question, opciones: updated })
-                  }}
-                >
-                  <Trash2 className="mr-2 h-4 w-4" />
-                  Quitar
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
-  )
-}
-
-function StepTab({
-  step,
-  title,
-  isActive,
-  isComplete,
-  onClick,
-}: {
-  step: number
-  title: string
-  isActive: boolean
-  isComplete: boolean
-  onClick: () => void
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`rounded-[16px] border px-4 py-4 text-left transition ${
-        isActive
-          ? "border-[#2f6f35] bg-[#eef5ee] text-[#22562d]"
-          : "border-[#e2dbcf] bg-white text-[#3d3025] hover:border-[#cdb79d]"
-      }`}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${isActive ? "bg-white text-[#2f6f35]" : "bg-[#faf8f3] text-[#6d665d]"}`}>
-          Paso {step}
-        </span>
-        {isComplete ? <CheckCircle2 className={`h-4 w-4 ${isActive ? "text-[#2f6f35]" : "text-[#2f6f35]"}`} /> : null}
-      </div>
-      <p className="mt-3 text-lg font-semibold">{title}</p>
-    </button>
-  )
-}
-
-
-function ReviewCard({ title, action, onClick, children }: { title: string; action: string; onClick: () => void; children: ReactNode }) {
-  return (
-    <div className="rounded-[16px] border border-[#e2dbcf] bg-white p-5">
-      <div className="flex items-center justify-between gap-3">
-        <p className="text-lg font-semibold text-[#3d3025]">{title}</p>
-        <Button type="button" variant="outline" className="rounded-2xl" onClick={onClick}>
-          {action}
-        </Button>
-      </div>
-      <div className="mt-4 space-y-3">{children}</div>
-    </div>
-  )
-}
-
-function ReviewLine({ label, value, multiline }: { label: string; value: string; multiline?: boolean }) {
-  return (
-    <div className={`rounded-[18px] bg-[#faf8f3] px-4 py-3 ${multiline ? "space-y-1" : "flex items-center justify-between gap-3"}`}>
-      <span className="text-sm text-[#6d665d]">{label}</span>
-      <span className={`font-medium text-[#3d3025] ${multiline ? "block" : "text-right"}`}>{value}</span>
     </div>
   )
 }

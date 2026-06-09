@@ -4,61 +4,118 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ═══════════════════════════════════════════════════════
+   ACARO 2.0 — Design System Variables
+   Earth-tone palette · Warm backgrounds · HSL format
+   ═══════════════════════════════════════════════════════ */
+
 @layer base {
   :root {
-    --background: 60 14% 99%;
-    --foreground: 28 22% 18%;
+    /* ── Core surfaces ───────────────────────────────── */
+    --background: 70 20% 97%;          /* #f9faf7  warm white */
+    --foreground: 25 20% 15%;          /* #3d3025  dark brown */
 
-    --card: 0 0% 100%;
-    --card-foreground: 20 30% 20%;
+    --card: 0 0% 100%;                 /* #ffffff */
+    --card-foreground: 25 20% 15%;     /* #3d3025 */
 
     --popover: 0 0% 100%;
-    --popover-foreground: 20 30% 20%;
+    --popover-foreground: 25 20% 15%;
 
-    --primary: 126 41% 31%;
-    --primary-foreground: 40 50% 96%;
+    /* ── Brand colors ────────────────────────────────── */
+    --primary: 128 41% 31%;            /* #2f6f35  forest green */
+    --primary-foreground: 60 33% 96%;  /* #fafaf7 */
 
-    --secondary: 42 40% 95%;
-    --secondary-foreground: 20 30% 20%;
+    --secondary: 42 33% 95%;           /* #faf5eb  warm cream */
+    --secondary-foreground: 25 20% 15%;
 
-    --muted: 45 28% 95%;
-    --muted-foreground: 35 10% 44%;
+    --accent: 38 45% 54%;              /* #c4a14e  gold */
+    --accent-foreground: 60 33% 96%;
 
-    --accent: 41 49% 52%;
-    --accent-foreground: 40 50% 96%;
+    /* ── Muted / utility ─────────────────────────────── */
+    --muted: 43 25% 96%;              /* #fafaf7 */
+    --muted-foreground: 33 8% 45%;    /* #6d665d  warm grey */
 
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 38 22% 86%;
-    --input: 35 28% 82%;
-    --ring: 132 33% 28%;
+    /* ── Borders & inputs ────────────────────────────── */
+    --border: 36 20% 87%;             /* #e7e2d8  warm border */
+    --input: 34 24% 83%;              /* #e2dbcf */
+    --ring: 128 33% 28%;              /* #22562d  dark green */
 
-    --radius: 0.875rem;
+    /* ── Radius ──────────────────────────────────────── */
+    --radius: 0.75rem;
+
+    /* ── Chart palette ───────────────────────────────── */
+    --chart-1: 128 41% 31%;           /* green */
+    --chart-2: 38 45% 54%;            /* gold */
+    --chart-3: 20 45% 42%;            /* #7a4b2b  brown */
+    --chart-4: 33 8% 45%;             /* #6d665d  muted */
+    --chart-5: 128 25% 50%;           /* light green */
+
+    /* ── Sidebar (dark) ──────────────────────────────── */
+    --sidebar-background: 20 18% 10%;  /* #1a1614  dark warm */
+    --sidebar-foreground: 40 20% 85%;
+    --sidebar-primary: 128 41% 38%;
+    --sidebar-primary-foreground: 60 33% 96%;
+    --sidebar-accent: 38 45% 54%;
+    --sidebar-accent-foreground: 60 33% 96%;
+    --sidebar-border: 20 12% 18%;
+    --sidebar-ring: 128 33% 28%;
+    --sidebar-muted-foreground: 33 10% 55%;
   }
 
+  /* ── Dark mode ─────────────────────────────────────── */
   .dark {
-    --background: 24 27% 15%;
-    --foreground: 40 50% 96%;
-    --card: 24 27% 17%;
-    --card-foreground: 40 50% 96%;
-    --popover: 24 27% 17%;
-    --popover-foreground: 40 50% 96%;
-    --primary: 40 50% 96%;
-    --primary-foreground: 24 27% 17%;
-    --secondary: 24 17% 22%;
-    --secondary-foreground: 40 50% 96%;
-    --muted: 24 17% 22%;
-    --muted-foreground: 34 17% 70%;
-    --accent: 132 33% 35%;
-    --accent-foreground: 40 50% 96%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 24 17% 22%;
-    --input: 24 17% 22%;
-    --ring: 40 50% 96%;
+    --background: 18 20% 5%;            /* #0f0d0b */
+    --foreground: 40 15% 88%;           /* #e6e0d6 */
+
+    --card: 18 15% 9%;                  /* #1a1614 */
+    --card-foreground: 40 15% 88%;
+
+    --popover: 18 15% 9%;
+    --popover-foreground: 40 15% 88%;
+
+    --primary: 128 38% 42%;             /* brighter green for dark */
+    --primary-foreground: 18 15% 9%;
+
+    --secondary: 20 10% 14%;            /* #252220 */
+    --secondary-foreground: 40 15% 88%;
+
+    --accent: 38 40% 50%;               /* gold, slightly muted */
+    --accent-foreground: 18 15% 9%;
+
+    --muted: 20 10% 14%;                /* #252220 */
+    --muted-foreground: 33 12% 58%;     /* warmer muted text */
+
+    --destructive: 0 62% 35%;
+    --destructive-foreground: 0 0% 95%;
+
+    --border: 20 10% 18%;               /* #2f2b27 */
+    --input: 20 10% 20%;
+    --ring: 128 38% 42%;
+
+    --chart-1: 128 38% 42%;
+    --chart-2: 38 40% 50%;
+    --chart-3: 20 35% 50%;
+    --chart-4: 33 12% 58%;
+    --chart-5: 128 30% 55%;
+
+    --sidebar-background: 18 20% 5%;
+    --sidebar-foreground: 40 15% 80%;
+    --sidebar-primary: 128 38% 42%;
+    --sidebar-primary-foreground: 18 15% 9%;
+    --sidebar-accent: 38 40% 50%;
+    --sidebar-accent-foreground: 18 15% 9%;
+    --sidebar-border: 20 10% 14%;
+    --sidebar-ring: 128 38% 42%;
+    --sidebar-muted-foreground: 33 10% 48%;
   }
 }
+
+/* ═══════════════════════════════════════════════════════
+   Base styles
+   ═══════════════════════════════════════════════════════ */
 
 @layer base {
   * {
@@ -67,12 +124,12 @@
 
   html {
     scroll-behavior: smooth;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
-    background: #f9faf7;
   }
 
   h1, h2, h3, h4, h5, h6 {
@@ -85,20 +142,127 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════════
+   Custom scrollbar
+   ═══════════════════════════════════════════════════════ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* ═══════════════════════════════════════════════════════
+   Utility classes — ACARO 2.0
+   ═══════════════════════════════════════════════════════ */
+
 @layer utilities {
-  .acaro-surface {
-    @apply border border-[#e7e2d8] bg-white;
+
+  /* ── Section title: uppercase tracking label ─────── */
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-[0.28em];
+    color: hsl(var(--accent));
   }
 
-  .acaro-muted {
-    @apply bg-[#fafaf7];
+  /* ── Metric strip: horizontal row of KPIs ────────── */
+  .metric-strip {
+    @apply flex flex-wrap items-stretch gap-0;
   }
 
-  .acaro-chip {
-    @apply rounded-full border border-[#e4ddd2] bg-[#fafaf7] px-3 py-1 text-xs font-medium text-[#6d665d];
+  .metric-item {
+    @apply flex flex-col justify-center px-6 py-4;
   }
 
-  .acaro-section-title {
-    @apply text-xs font-semibold uppercase tracking-[0.28em] text-[#927043];
+  .metric-divider {
+    @apply self-stretch my-3;
+    width: 1px;
+    background: hsl(var(--border));
   }
+
+  /* ── Table row hover ─────────────────────────────── */
+  .table-row-hover {
+    @apply transition-colors duration-150;
+  }
+  .table-row-hover:hover {
+    background: hsl(var(--muted));
+  }
+
+  /* ── Sidebar dark styles ─────────────────────────── */
+  .sidebar-dark {
+    background: hsl(var(--sidebar-background));
+    color: hsl(var(--sidebar-foreground));
+    border-color: hsl(var(--sidebar-border));
+  }
+
+  /* ── Animations ──────────────────────────────────── */
+  .fade-in {
+    animation: fadeIn 0.4s ease-out both;
+  }
+
+  .slide-up {
+    animation: slideUp 0.45s ease-out both;
+  }
+}
+
+/* ── Keyframes ─────────────────────────────────────── */
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════
+   Theme transition smoothing
+   ═══════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  transition-property: background-color, border-color, box-shadow;
+  transition-duration: 0.2s;
+  transition-timing-function: ease;
+}
+
+/* Opt out for elements that need instant response */
+button,
+a,
+input,
+textarea,
+select,
+[role="button"] {
+  transition-property: background-color, border-color, box-shadow, color, opacity;
+  transition-duration: 0.15s;
 }
